@@ -3,12 +3,10 @@ import { MdAddShoppingCart } from "react-icons/md";
 import { api } from "../../services/api";
 import { Container, Carts, CartItem } from "./styles";
 import {formatCurrency} from '../../utils/formatCurrency'
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  image: string;
-}
+import { Product } from "../../types/types";
+import { useCart } from "../../hooks/useCart";
+
+
 
 interface ProductFormatted extends Product {
   priceFormatted: string;
@@ -20,6 +18,13 @@ interface CartItemsAmount {
 
 export function Home() {
   const [products, setProducts] = useState<ProductFormatted[]>([])
+  const {addProduct,cart} = useCart()
+
+  const cartItemsAmount = cart.reduce((stockAmount, product)=> {
+    stockAmount[product.id] = product.amount
+    return stockAmount;
+  }, [] as CartItemsAmount) 
+
   useEffect(() => {
     async function loadProducts() {
       const { data } = await api.get<Product[]>('/products')
@@ -35,8 +40,8 @@ export function Home() {
     loadProducts()
   }, [])
 
-  function handleAddProductToCart(product: Product){
-    return;
+  function handleAddProductToCart(productId: number){
+    addProduct(productId)
   }
 
   return (
@@ -47,10 +52,10 @@ export function Home() {
             <img src={product.image} alt={product.title} />
             <p>{product.title}</p>
             <strong>{product.priceFormatted}</strong>
-            <button>
+            <button onClick={()=>handleAddProductToCart(product.id)}>
               <div>
                 <MdAddShoppingCart size={16} color="#FFF" />
-                <span className="cart-quantity">0</span>
+                <span className="cart-quantity">{cartItemsAmount[product.id] || 0}</span>
               </div>
               <span>ADICIONAR AO CARRINHO</span>
             </button>
